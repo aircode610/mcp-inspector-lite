@@ -26,7 +26,7 @@ class McpConnectionService(private val project: Project) {
         LOG.info("Initializing MCP Plugin Service")
         client = Client(clientInfo = Implementation(name = "myplugin-mcp-client", version = "1.0.0"))
 
-        // Start MCP server as a subprocess (Python or other)
+        // Start MCP server as a subprocess (Python script)
         runBlocking {
             try {
                 val serverFile = extractServerFromResources()
@@ -57,6 +57,9 @@ class McpConnectionService(private val project: Project) {
         }
     }
 
+    /**
+     * Extract script from resources to a temporary file
+     */
     private fun extractServerFromResources(): File {
         val resourceStream = this::class.java.classLoader.getResourceAsStream("mcp/server.py")
             ?: throw IllegalStateException("server.py not found in resources")
