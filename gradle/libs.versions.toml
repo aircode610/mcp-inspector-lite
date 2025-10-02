@@ -1,0 +1,20 @@
+[versions]
+compose = "1.4.0"
+coroutines = "1.10.2"
+intellij-plugin = "1.17.4"
+kotlin = "2.2.20"
+kotlin-compose = "2.2.20"
+mcp-kotlin = "0.7.2"
+serialization = "1.9.0"
+
+[plugins]
+intellij = { id = "org.jetbrains.intellij", version.ref = "intellij-plugin" }
+kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin-compose" }
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+
+[libraries]
+compose-desktop = { module = "org.jetbrains.compose.desktop:desktop", version.ref = "compose" }
+kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "coroutines" }
+kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "serialization" }
+mcp-kotlin-client = { group = "io.modelcontextprotocol", name = "kotlin-sdk-client", version.ref = "mcp-kotlin" }
