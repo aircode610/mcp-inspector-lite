@@ -23,7 +23,7 @@
        Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
   <extensions defaultExtensionNs="com.intellij">
     <toolWindow id="mcp"
-                factoryClass="com.amirali.myplugin.mcpinspectorlite.TestToolWindow"
+                factoryClass="com.amirali.myplugin.mcpinspectorlite.ui.McpToolWindow"
                 anchor="right"/>
   </extensions>
 </idea-plugin>
