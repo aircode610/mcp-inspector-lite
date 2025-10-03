@@ -19,41 +19,78 @@ class McpConnectionService(private val project: Project) {
 
     private val LOG = Logger.getInstance(McpConnectionService::class.java)
 
-    private val client: Client
+    private var client: Client? = null
+    private var process: Process? = null
     private val tools = mutableListOf<String>()
 
-    init {
-        LOG.info("Initializing MCP Plugin Service")
-        client = Client(clientInfo = Implementation(name = "myplugin-mcp-client", version = "1.0.0"))
+    /**
+     * Connect to the MCP server (spawns subprocess + establishes transport)
+     */
+    fun connect() = runBlocking {
+        if (client != null) {
+            LOG.warn("Already connected to MCP server")
+            return@runBlocking
+        }
 
-        // Start MCP server as a subprocess (Python script)
+        try {
+            val serverFile = extractServerFromResources()
+            LOG.info("Launching MCP server from temp file: ${serverFile.absolutePath}")
+
+            val command = listOf(
+                if (System.getProperty("os.name").lowercase().contains("win")) "python" else "python3",
+                serverFile.absolutePath
+            )
+
+            process = ProcessBuilder(command).redirectErrorStream(true).start()
+
+            val transport = StdioClientTransport(
+                input = process!!.inputStream.asSource().buffered(),
+                output = process!!.outputStream.asSink().buffered()
+            )
+
+            val newClient = Client(
+                clientInfo = Implementation(name = "myplugin-mcp-client", version = "1.0.0")
+            )
+            newClient.connect(transport)
+
+            client = newClient
+
+            // Fetch tools
+            val toolsResult = client!!.listTools()
+            tools.clear()
+            tools.addAll(toolsResult.tools.map { it.name })
+            LOG.info("Connected to MCP server with tools: ${tools.joinToString(", ")}")
+
+        } catch (e: Exception) {
+            LOG.error("Failed to connect to MCP server", e)
+            disconnect() // cleanup if failed
+        }
+    }
+
+    /**
+     * Disconnect from MCP server (close client + kill process)
+     */
+    fun disconnect() {
         runBlocking {
             try {
-                val serverFile = extractServerFromResources()
-                LOG.info("Launching MCP server from temp file: ${serverFile.absolutePath}")
-
-                val command = listOf(
-                    if (System.getProperty("os.name").lowercase().contains("win")) "python" else "python3",
-                    serverFile.absolutePath
-                )
-
-                val process = ProcessBuilder(command).start()
-
-                val transport = StdioClientTransport(
-                    input = process.inputStream.asSource().buffered(),
-                    output = process.outputStream.asSink().buffered()
-                )
-
-                client.connect(transport)
-
-                // Fetch tools from server
-                val toolsResult = client.listTools()
-                tools.addAll(toolsResult.tools.map { it.name })
-                LOG.info("Connected to MCP server with tools: ${tools.joinToString(", ")}")
-
+                client?.close()
+                LOG.info("MCP client closed")
             } catch (e: Exception) {
-                LOG.error("Failed to connect to MCP server", e)
+                LOG.warn("Error closing MCP client", e)
+            } finally {
+                client = null
             }
+
+            try {
+                process?.destroy()
+                LOG.info("MCP server process destroyed")
+            } catch (e: Exception) {
+                LOG.warn("Error killing MCP server process", e)
+            } finally {
+                process = null
+            }
+
+            tools.clear()
         }
     }
 
@@ -72,20 +109,13 @@ class McpConnectionService(private val project: Project) {
                 input.copyTo(output)
             }
         }
-
         return tempFile
     }
 
-    /**
-     * List available tools
-     */
     fun listTools(): List<String> = tools
 
-    /**
-     * Invoke a tool on the server
-     */
     fun invokeTool(name: String, parameters: Map<String, Any>): String = runBlocking {
-        val result = client.callTool(
+        val result = client?.callTool(
             name = name,
             arguments = parameters
         )
