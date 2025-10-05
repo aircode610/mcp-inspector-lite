@@ -8,11 +8,15 @@ import io.modelcontextprotocol.kotlin.sdk.client.Client
 import io.modelcontextprotocol.kotlin.sdk.client.StdioClientTransport
 import io.modelcontextprotocol.kotlin.sdk.Implementation
 import io.modelcontextprotocol.kotlin.sdk.TextContent
+import io.modelcontextprotocol.kotlin.sdk.Tool
 import kotlinx.coroutines.runBlocking
 import kotlinx.io.asSink
 import kotlinx.io.asSource
 import kotlinx.io.buffered
 import java.io.File
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.contentOrNull
 
 @Service(Service.Level.PROJECT)
 class McpConnectionService(private val project: Project) {
@@ -21,7 +25,7 @@ class McpConnectionService(private val project: Project) {
 
     private var client: Client? = null
     private var process: Process? = null
-    private val tools = mutableListOf<String>()
+    private val tools = mutableListOf<Tool>()
 
     /**
      * Connect to the MCP server (spawns subprocess + establishes transport)
@@ -58,7 +62,7 @@ class McpConnectionService(private val project: Project) {
             // Fetch tools
             val toolsResult = client!!.listTools()
             tools.clear()
-            tools.addAll(toolsResult.tools.map { it.name })
+            tools.addAll(toolsResult.tools)
             LOG.info("Connected to MCP server with tools: ${tools.joinToString(", ")}")
 
         } catch (e: Exception) {
@@ -112,7 +116,45 @@ class McpConnectionService(private val project: Project) {
         return tempFile
     }
 
-    fun listTools(): List<String> = tools
+    data class UiToolParameter(
+        val name: String,
+        val type: String?,
+        val description: String?,
+        val required: Boolean
+    )
+
+    data class UiTool(
+        val name: String,
+        val description: String?,
+        val parameters: List<UiToolParameter>
+    )
+
+    fun getUiTools(): List<UiTool> {
+        return tools.map { tool ->
+            val props = tool.inputSchema.properties
+            val requiredList = tool.inputSchema.required ?: emptyList()
+
+            val parameters = props.entries.map { (paramName, paramValue) ->
+                val obj = paramValue.jsonObject
+                UiToolParameter(
+                    name = paramName,
+                    type = obj["type"]?.jsonPrimitive?.contentOrNull,
+                    description = obj["description"]?.jsonPrimitive?.contentOrNull,
+                    required = requiredList.contains(paramName)
+                )
+            }
+
+            UiTool(
+                name = tool.name,
+                description = tool.description,
+                parameters = parameters
+            )
+        }
+    }
+
+
+
+    fun listTools(): List<Tool> = tools
 
     fun invokeTool(name: String, parameters: Map<String, Any>): String = runBlocking {
         val result = client?.callTool(

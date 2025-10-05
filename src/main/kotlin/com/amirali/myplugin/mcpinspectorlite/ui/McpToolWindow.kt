@@ -3,10 +3,12 @@ package com.amirali.myplugin.mcpinspectorlite.ui
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.awt.ComposePanel
 import com.amirali.myplugin.mcpinspectorlite.services.McpConnectionService
@@ -40,14 +42,15 @@ fun McpToolWindowUI(project: Project) {
     val scope = rememberCoroutineScope()
 
     var isConnected by remember { mutableStateOf(false) }
-    var tools by remember { mutableStateOf<List<String>>(emptyList()) }
+    var tools by remember { mutableStateOf(listOf<com.amirali.myplugin.mcpinspectorlite.services.McpConnectionService.UiTool>()) }
+    var invocationResults by remember { mutableStateOf(mapOf<String, String>()) }
 
     Column(
         modifier = Modifier.fillMaxSize().padding(16.dp),
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.Start
     ) {
-        // Top bar with MCP name + connect/disconnect
+        // Top bar: Connect / Disconnect
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -60,11 +63,12 @@ fun McpToolWindowUI(project: Project) {
                     try {
                         if (!isConnected) {
                             mcpService.connect()
-                            tools = mcpService.listTools()
+                            tools = mcpService.getUiTools()
                             isConnected = true
                         } else {
                             mcpService.disconnect()
                             tools = emptyList()
+                            invocationResults = emptyMap()
                             isConnected = false
                         }
                     } catch (e: Exception) {
@@ -95,11 +99,56 @@ fun McpToolWindowUI(project: Project) {
                             containerColor = MaterialTheme.colorScheme.surfaceVariant
                         )
                     ) {
-                        Row(
-                            modifier = Modifier.padding(12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text("🔧 $tool", style = MaterialTheme.typography.bodyLarge)
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Text("🔧 ${tool.name}", style = MaterialTheme.typography.bodyLarge)
+                            tool.description?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
+
+                            // State for parameters input
+                            val paramStates = remember(tool.name) {
+                                tool.parameters.associate { param ->
+                                    param.name to mutableStateOf("")
+                                }
+                            }
+
+                            Spacer(Modifier.height(8.dp))
+
+                            // Input fields for each parameter
+                            tool.parameters.forEach { param ->
+                                val state = paramStates[param.name]!!
+                                OutlinedTextField(
+                                    value = state.value,
+                                    onValueChange = { state.value = it },
+                                    label = { Text("${param.name} (${param.type ?: "string"})") },
+                                    placeholder = { Text(param.description ?: "") },
+                                    singleLine = true,
+                                    modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
+                                    keyboardOptions = KeyboardOptions(
+                                        keyboardType = when (param.type?.lowercase()) {
+                                            "number", "int", "float", "double" -> KeyboardType.Number
+                                            else -> KeyboardType.Text
+                                        }
+                                    )
+                                )
+                            }
+
+                            Spacer(Modifier.height(8.dp))
+
+                            // Invoke button
+                            Button(onClick = {
+                                scope.launch(Dispatchers.IO) {
+                                    val args = paramStates.mapValues { it.value.value as Any }
+                                    val result = mcpService.invokeTool(tool.name, args)
+                                    invocationResults = invocationResults + (tool.name to result)
+                                }
+                            }) {
+                                Text("Invoke")
+                            }
+
+                            // Show result if available
+                            invocationResults[tool.name]?.let { result ->
+                                Spacer(Modifier.height(4.dp))
+                                Text("Result: $result", style = MaterialTheme.typography.bodyMedium)
+                            }
                         }
                     }
                 }
