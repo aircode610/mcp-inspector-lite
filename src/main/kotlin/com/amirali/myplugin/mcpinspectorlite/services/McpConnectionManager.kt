@@ -13,6 +13,7 @@ import io.modelcontextprotocol.kotlin.sdk.Tool
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.withTimeout
 import kotlinx.io.asSink
 import kotlinx.io.asSource
 import kotlinx.io.buffered
@@ -34,8 +35,14 @@ class McpConnectionManager {
     private val _connectionState = MutableStateFlow<McpConnectionState>(McpConnectionState.Disconnected)
     val connectionState: StateFlow<McpConnectionState> = _connectionState.asStateFlow()
 
+    companion object {
+        private const val CONNECTION_TIMEOUT_MS = 10_000L // 10 seconds
+
+        fun getInstance(): McpConnectionManager = service()
+    }
+
     /**
-     * Connect to the MCP server
+     * Connect to the MCP server with timeout
      */
     suspend fun connect() {
         if (client != null) {
@@ -46,36 +53,59 @@ class McpConnectionManager {
         _connectionState.value = McpConnectionState.Connecting
 
         try {
-            val serverFile = resourceExtractor.extractServerScript()
-            val streams = processManager.startProcess(serverFile.absolutePath)
-
-            val transport = StdioClientTransport(
-                input = streams.input.asSource().buffered(),
-                output = streams.output.asSink().buffered()
-            )
-
-            val newClient = Client(
-                clientInfo = Implementation(
-                    name = "myplugin-mcp-client",
-                    version = "1.0.0"
-                )
-            )
-            newClient.connect(transport)
-            client = newClient
-
-            // Fetch available tools
-            val toolsResult = client!!.listTools()
-            _tools.clear()
-            _tools.addAll(toolsResult.tools)
-
-            _connectionState.value = McpConnectionState.Connected(toolsResult.tools.size)
-            LOG.info("Connected to MCP server with ${_tools.size} tools")
-
+            // Add timeout to prevent hanging
+            withTimeout(CONNECTION_TIMEOUT_MS) {
+                connectInternal()
+            }
+        } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
+            LOG.error("Connection timeout after ${CONNECTION_TIMEOUT_MS}ms")
+            _connectionState.value = McpConnectionState.Error("Connection timeout - server not responding")
+            disconnect()
         } catch (e: Exception) {
             LOG.error("Failed to connect to MCP server", e)
             _connectionState.value = McpConnectionState.Error(e.message ?: "Unknown error")
             disconnect()
         }
+    }
+
+    /**
+     * Internal connection logic
+     */
+    private suspend fun connectInternal() {
+        val serverFile = resourceExtractor.extractServerScript()
+        val streams = processManager.startProcess(serverFile.absolutePath)
+
+        // Give the process a moment to start
+        kotlinx.coroutines.delay(500)
+
+        if (!processManager.isHealthy()) {
+            throw IllegalStateException("Server process failed to start")
+        }
+
+        val transport = StdioClientTransport(
+            input = streams.input.asSource().buffered(),
+            output = streams.output.asSink().buffered()
+        )
+
+        val newClient = Client(
+            clientInfo = Implementation(
+                name = "myplugin-mcp-client",
+                version = "1.0.0"
+            )
+        )
+
+        LOG.info("Attempting to connect to MCP server...")
+        newClient.connect(transport)
+        client = newClient
+
+        LOG.info("Client connected, fetching tools...")
+        // Fetch available tools
+        val toolsResult = client!!.listTools()
+        _tools.clear()
+        _tools.addAll(toolsResult.tools)
+
+        _connectionState.value = McpConnectionState.Connected(toolsResult.tools.size)
+        LOG.info("Successfully connected to MCP server with ${_tools.size} tools")
     }
 
     /**
@@ -115,8 +145,4 @@ class McpConnectionManager {
      * Get the MCP client for advanced operations
      */
     fun getClient(): Client? = client
-
-    companion object {
-        fun getInstance(): McpConnectionManager = service()
-    }
 }
