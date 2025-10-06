@@ -5,10 +5,9 @@ import java.io.File
 
 /**
  * Handles extraction of bundled resources to temporary files
- * Not a service - used as a component by McpConnectionManager
  */
 class McpResourceExtractor {
-    private val LOG = Logger.getInstance(McpResourceExtractor::class.java)
+    private val logger = Logger.getInstance(McpResourceExtractor::class.java)
 
     /**
      * Extract the MCP server script from resources to a temp file
@@ -26,7 +25,7 @@ class McpResourceExtractor {
             }
         }
 
-        LOG.info("Extracted MCP server to: ${tempFile.absolutePath}")
+        logger.info("Extracted MCP server to: ${tempFile.absolutePath}")
         return tempFile
     }
 }
