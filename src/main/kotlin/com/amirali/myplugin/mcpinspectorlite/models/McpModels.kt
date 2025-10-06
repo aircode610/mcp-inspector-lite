@@ -67,3 +67,10 @@ object ToolMapper {
         )
     }
 }
+
+data class DiagnosticResult(
+    val pythonAvailable: Boolean,
+    val pythonVersion: String?,
+    val mcpPackageInstalled: Boolean,
+    val errorMessage: String?
+)

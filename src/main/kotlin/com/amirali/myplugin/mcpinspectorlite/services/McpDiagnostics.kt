@@ -1,5 +1,6 @@
 package com.amirali.myplugin.mcpinspectorlite.services
 
+import com.amirali.myplugin.mcpinspectorlite.models.DiagnosticResult
 import com.intellij.openapi.diagnostic.Logger
 import java.io.BufferedReader
 import java.io.InputStreamReader
@@ -9,17 +10,10 @@ import java.util.concurrent.TimeUnit
  * Diagnostic utilities for troubleshooting MCP connection issues
  */
 object McpDiagnostics {
-    private val LOG = Logger.getInstance(McpDiagnostics::class.java)
-
-    data class DiagnosticResult(
-        val pythonAvailable: Boolean,
-        val pythonVersion: String?,
-        val mcpPackageInstalled: Boolean,
-        val errorMessage: String?
-    )
+    private val logger = Logger.getInstance(McpDiagnostics::class.java)
 
     /**
-     * Run diagnostic checks for MCP server requirements
+     * Run diagnostic checks for MCP server requirements (Python + MCP)
      */
     fun runDiagnostics(): DiagnosticResult {
         val pythonCommand = if (System.getProperty("os.name").lowercase().contains("win")) {
@@ -28,9 +22,7 @@ object McpDiagnostics {
             "python3"
         }
 
-        // Check Python availability and version
         val (pythonAvailable, pythonVersion) = checkPython(pythonCommand)
-
         if (!pythonAvailable) {
             return DiagnosticResult(
                 pythonAvailable = false,
@@ -40,9 +32,7 @@ object McpDiagnostics {
             )
         }
 
-        // Check if MCP package is installed
         val mcpInstalled = checkMcpPackage(pythonCommand)
-
         val errorMessage = when {
             !mcpInstalled -> "MCP package not installed. Run: pip install mcp"
             else -> null
@@ -69,13 +59,13 @@ object McpDiagnostics {
             val exitCode = process.waitFor(5, TimeUnit.SECONDS)
 
             if (exitCode && process.exitValue() == 0) {
-                LOG.info("Python check: $output")
+                logger.info("Python check: $output")
                 Pair(true, output)
             } else {
                 Pair(false, null)
             }
         } catch (e: Exception) {
-            LOG.warn("Failed to check Python: ${e.message}")
+            logger.warn("Failed to check Python: ${e.message}")
             Pair(false, null)
         }
     }
@@ -93,16 +83,16 @@ object McpDiagnostics {
             val exitCode = process.waitFor(5, TimeUnit.SECONDS)
 
             if (exitCode && process.exitValue() == 0) {
-                LOG.info("MCP package is installed")
+                logger.info("MCP package is installed")
                 true
             } else {
                 val error = BufferedReader(InputStreamReader(process.inputStream))
                     .readText()
-                LOG.warn("MCP package check failed: $error")
+                logger.warn("MCP package check failed: $error")
                 false
             }
         } catch (e: Exception) {
-            LOG.warn("Failed to check MCP package: ${e.message}")
+            logger.warn("Failed to check MCP package: ${e.message}")
             false
         }
     }
@@ -112,25 +102,25 @@ object McpDiagnostics {
      */
     fun getDiagnosticMessage(result: DiagnosticResult): String {
         return buildString {
-            appendLine("🔍 MCP Connection Diagnostics:")
+            appendLine("MCP Connection Diagnostics:")
             appendLine()
             append("Python: ")
             if (result.pythonAvailable) {
-                appendLine("✅ ${result.pythonVersion}")
+                appendLine("${result.pythonVersion}")
             } else {
-                appendLine("❌ Not found")
+                appendLine("Not found")
             }
 
             append("MCP Package: ")
             if (result.mcpPackageInstalled) {
-                appendLine("✅ Installed")
+                appendLine("Installed")
             } else {
-                appendLine("❌ Not installed")
+                appendLine("Not installed")
             }
 
             if (result.errorMessage != null) {
                 appendLine()
-                appendLine("❌ ${result.errorMessage}")
+                appendLine("${result.errorMessage}")
             }
 
             if (!result.mcpPackageInstalled) {
