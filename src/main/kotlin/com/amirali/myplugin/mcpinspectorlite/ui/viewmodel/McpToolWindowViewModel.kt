@@ -15,7 +15,6 @@ import kotlinx.coroutines.launch
 
 /**
  * ViewModel for the MCP Tool Window UI
- * Uses application-level services (shared across all projects)
  */
 class McpToolWindowViewModel {
 
@@ -24,7 +23,6 @@ class McpToolWindowViewModel {
 
     private val viewModelScope = CoroutineScope(Dispatchers.IO)
 
-    // UI State
     private val _tools = MutableStateFlow<List<UiTool>>(emptyList())
     val tools: StateFlow<List<UiTool>> = _tools.asStateFlow()
 
@@ -45,7 +43,6 @@ class McpToolWindowViewModel {
             connectionManager.connect()
             _tools.value = connectionManager.getUiTools()
 
-            // If connection failed, run diagnostics
             val state = connectionManager.connectionState.value
             if (state is McpConnectionState.Error) {
                 runDiagnostics()
@@ -80,7 +77,6 @@ class McpToolWindowViewModel {
      */
     fun invokeTool(toolName: String, parameters: Map<String, String>, parameterTypes: Map<String, String?>) {
         viewModelScope.launch {
-            // Convert string parameters to appropriate types
             val typedParams = parameters.mapValues { (key, value) ->
                 val type = parameterTypes[key]
                 toolExecutor.parseParameter(value, type)
@@ -88,10 +84,10 @@ class McpToolWindowViewModel {
 
             when (val result = toolExecutor.invokeTool(toolName, typedParams)) {
                 is ToolInvocationResult.Success -> {
-                    _invocationResults.value = _invocationResults.value + (toolName to result.output)
+                    _invocationResults.value += (toolName to result.output)
                 }
                 is ToolInvocationResult.Error -> {
-                    _invocationResults.value = _invocationResults.value + (toolName to "Error: ${result.message}")
+                    _invocationResults.value += _invocationResults.value + (toolName to "Error: ${result.message}")
                 }
             }
         }
@@ -101,13 +97,6 @@ class McpToolWindowViewModel {
      * Clear result for a specific tool
      */
     fun clearResult(toolName: String) {
-        _invocationResults.value = _invocationResults.value - toolName
-    }
-
-    /**
-     * Clear all results
-     */
-    fun clearAllResults() {
-        _invocationResults.value = emptyMap()
+        _invocationResults.value -= toolName
     }
 }

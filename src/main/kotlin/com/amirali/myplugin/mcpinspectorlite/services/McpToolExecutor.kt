@@ -8,11 +8,10 @@ import io.modelcontextprotocol.kotlin.sdk.TextContent
 
 /**
  * Application-level service for tool execution and result processing
- * Singleton across all projects
  */
 @Service(Service.Level.APP)
 class McpToolExecutor {
-    private val LOG = Logger.getInstance(McpToolExecutor::class.java)
+    private val logger = Logger.getInstance(McpToolExecutor::class.java)
 
     private val connectionManager by lazy {
         McpConnectionManager.getInstance()
@@ -29,7 +28,7 @@ class McpToolExecutor {
             ?: return ToolInvocationResult.Error("Not connected to MCP server")
 
         return try {
-            LOG.info("Invoking tool: $toolName with parameters: $parameters")
+            logger.info("Invoking tool: $toolName with parameters: $parameters")
 
             val result = client.callTool(
                 name = toolName,
@@ -40,11 +39,11 @@ class McpToolExecutor {
                 (it as? TextContent)?.text ?: ""
             }
 
-            LOG.info("Tool $toolName executed successfully")
+            logger.info("Tool $toolName executed successfully")
             ToolInvocationResult.Success(output)
 
         } catch (e: Exception) {
-            LOG.error("Failed to invoke tool $toolName", e)
+            logger.error("Failed to invoke tool $toolName", e)
             ToolInvocationResult.Error(e.message ?: "Unknown error")
         }
     }

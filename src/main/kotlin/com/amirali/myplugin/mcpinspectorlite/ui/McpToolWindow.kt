@@ -19,14 +19,13 @@ import com.intellij.ui.content.ContentFactory
 
 /**
  * Factory for creating the MCP Tool Window
- * Note: Services are application-level, shared across all projects
  */
 class McpToolWindow : ToolWindowFactory {
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
         val composePanel = ComposePanel().apply {
             setContent {
                 MaterialTheme(
-                    colorScheme = darkColorScheme()
+                    colorScheme = lightColorScheme()
                 ) {
                     McpToolWindowUI()
                 }
@@ -45,7 +44,6 @@ class McpToolWindow : ToolWindowFactory {
  */
 @Composable
 fun McpToolWindowUI() {
-    // Application-level ViewModel - same instance across all projects
     val viewModel = remember { McpToolWindowViewModel() }
 
     val connectionState by viewModel.connectionState.collectAsState()

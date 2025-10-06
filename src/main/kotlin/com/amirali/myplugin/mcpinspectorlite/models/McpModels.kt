@@ -4,6 +4,8 @@ import io.modelcontextprotocol.kotlin.sdk.Tool
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.contentOrNull
+import java.io.InputStream
+import java.io.OutputStream
 
 /**
  * UI representation of an MCP tool parameter
@@ -28,8 +30,8 @@ data class UiTool(
  * Connection state for the MCP server
  */
 sealed class McpConnectionState {
-    object Disconnected : McpConnectionState()
-    object Connecting : McpConnectionState()
+    data object Disconnected : McpConnectionState()
+    data object Connecting : McpConnectionState()
     data class Connected(val toolCount: Int) : McpConnectionState()
     data class Error(val message: String) : McpConnectionState()
 }
@@ -67,3 +69,15 @@ object ToolMapper {
         )
     }
 }
+
+data class ProcessStreams(
+    val input: InputStream,
+    val output: OutputStream
+)
+
+data class DiagnosticResult(
+    val pythonAvailable: Boolean,
+    val pythonVersion: String?,
+    val mcpPackageInstalled: Boolean,
+    val errorMessage: String?
+)
