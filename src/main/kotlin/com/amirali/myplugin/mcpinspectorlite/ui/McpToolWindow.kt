@@ -25,7 +25,7 @@ class McpToolWindow : ToolWindowFactory {
         val composePanel = ComposePanel().apply {
             setContent {
                 MaterialTheme(
-                    colorScheme = darkColorScheme()
+                    colorScheme = lightColorScheme()
                 ) {
                     McpToolWindowUI()
                 }
