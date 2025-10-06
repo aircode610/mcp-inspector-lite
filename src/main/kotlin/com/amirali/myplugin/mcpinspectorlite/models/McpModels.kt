@@ -28,8 +28,8 @@ data class UiTool(
  * Connection state for the MCP server
  */
 sealed class McpConnectionState {
-    object Disconnected : McpConnectionState()
-    object Connecting : McpConnectionState()
+    data object Disconnected : McpConnectionState()
+    data object Connecting : McpConnectionState()
     data class Connected(val toolCount: Int) : McpConnectionState()
     data class Error(val message: String) : McpConnectionState()
 }

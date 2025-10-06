@@ -30,7 +30,7 @@ class McpConnectionManager {
     private val resourceExtractor = McpResourceExtractor()
 
     private var client: Client? = null
-    private val _tools = mutableListOf<Tool>()
+    private val tools = mutableListOf<Tool>()
 
     private val _connectionState = MutableStateFlow<McpConnectionState>(McpConnectionState.Disconnected)
     val connectionState: StateFlow<McpConnectionState> = _connectionState.asStateFlow()
@@ -101,11 +101,11 @@ class McpConnectionManager {
         LOG.info("Client connected, fetching tools...")
         // Fetch available tools
         val toolsResult = client!!.listTools()
-        _tools.clear()
-        _tools.addAll(toolsResult.tools)
+        tools.clear()
+        tools.addAll(toolsResult.tools)
 
         _connectionState.value = McpConnectionState.Connected(toolsResult.tools.size)
-        LOG.info("Successfully connected to MCP server with ${_tools.size} tools")
+        LOG.info("Successfully connected to MCP server with ${tools.size} tools")
     }
 
     /**
@@ -122,19 +122,19 @@ class McpConnectionManager {
         }
 
         processManager.stopProcess()
-        _tools.clear()
+        tools.clear()
         _connectionState.value = McpConnectionState.Disconnected
     }
 
     /**
      * Get all available tools
      */
-    fun getTools(): List<Tool> = _tools.toList()
+    fun getTools(): List<Tool> = tools.toList()
 
     /**
      * Get UI-friendly tool representation
      */
-    fun getUiTools(): List<UiTool> = _tools.map { ToolMapper.toUiTool(it) }
+    fun getUiTools(): List<UiTool> = tools.map { ToolMapper.toUiTool(it) }
 
     /**
      * Check if connected
