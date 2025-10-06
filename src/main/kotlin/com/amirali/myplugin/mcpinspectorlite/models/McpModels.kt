@@ -4,6 +4,8 @@ import io.modelcontextprotocol.kotlin.sdk.Tool
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.contentOrNull
+import java.io.InputStream
+import java.io.OutputStream
 
 /**
  * UI representation of an MCP tool parameter
@@ -67,6 +69,11 @@ object ToolMapper {
         )
     }
 }
+
+data class ProcessStreams(
+    val input: InputStream,
+    val output: OutputStream
+)
 
 data class DiagnosticResult(
     val pythonAvailable: Boolean,
