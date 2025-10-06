@@ -15,7 +15,6 @@ import kotlinx.coroutines.launch
 
 /**
  * ViewModel for the MCP Tool Window UI
- * Uses application-level services (shared across all projects)
  */
 class McpToolWindowViewModel {
 
@@ -24,7 +23,6 @@ class McpToolWindowViewModel {
 
     private val viewModelScope = CoroutineScope(Dispatchers.IO)
 
-    // UI State
     private val _tools = MutableStateFlow<List<UiTool>>(emptyList())
     val tools: StateFlow<List<UiTool>> = _tools.asStateFlow()
 
@@ -45,7 +43,6 @@ class McpToolWindowViewModel {
             connectionManager.connect()
             _tools.value = connectionManager.getUiTools()
 
-            // If connection failed, run diagnostics
             val state = connectionManager.connectionState.value
             if (state is McpConnectionState.Error) {
                 runDiagnostics()
