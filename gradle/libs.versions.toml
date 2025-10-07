@@ -1,10 +1,12 @@
 [versions]
 compose = "1.9.0"
-coroutines = "1.10.2"
 intellij-plugin = "1.17.4"
+junit = "5.10.2"
+junit-platform = "1.10.2"
 kotlin = "2.2.20"
 material3 = "1.9.0-alpha04"
 mcp-kotlin = "0.7.2"
+mockk = "1.13.8"
 serialization = "1.9.0"
 
 [plugins]
@@ -17,6 +19,9 @@ kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", versi
 [libraries]
 compose-desktop = { module = "org.jetbrains.compose.desktop:desktop", version.ref = "compose" }
 compose-material3 = { module = "org.jetbrains.compose.material3:material3", version.ref = "material3" }
-kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "coroutines" }
+junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit" }
+junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit" }
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher", version.ref = "junit-platform" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "serialization" }
 mcp-kotlin-client = { group = "io.modelcontextprotocol", name = "kotlin-sdk-client", version.ref = "mcp-kotlin" }
+mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
