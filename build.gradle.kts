@@ -24,9 +24,14 @@ dependencies {
   implementation(libs.compose.desktop)
   implementation(libs.compose.material3)
   implementation(compose.desktop.currentOs)
-  implementation(libs.kotlinx.coroutines.core)
   implementation(libs.kotlinx.serialization.json)
   implementation(libs.mcp.kotlin.client)
+
+  testImplementation(libs.junit.jupiter.api)
+  testRuntimeOnly(libs.junit.jupiter.engine)
+  testRuntimeOnly(libs.junit.platform.launcher)
+  testImplementation(libs.mockk)
+  testImplementation(libs.mockk)
 }
 
 // Configure Gradle IntelliJ Plugin
@@ -62,5 +67,9 @@ tasks {
 
   publishPlugin {
     token.set(System.getenv("PUBLISH_TOKEN"))
+  }
+
+  test {
+    useJUnitPlatform()
   }
 }
