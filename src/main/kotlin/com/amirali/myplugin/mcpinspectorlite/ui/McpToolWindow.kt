@@ -44,7 +44,7 @@ class McpToolWindow : ToolWindowFactory {
  */
 @Composable
 fun McpToolWindowUI() {
-    val viewModel = remember { McpToolWindowViewModel() }
+    val viewModel = remember { McpToolWindowViewModel.getInstance() }
 
     val connectionState by viewModel.connectionState.collectAsState()
     val tools by viewModel.tools.collectAsState()
