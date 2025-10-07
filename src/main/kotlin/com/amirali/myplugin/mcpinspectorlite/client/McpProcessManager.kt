@@ -26,10 +26,15 @@ class McpProcessManager {
             throw IllegalStateException("Process already running")
         }
 
-        val command = listOf(
-            if (System.getProperty("os.name").lowercase().contains("win")) "python" else "python3",
-            serverScriptPath
-        )
+        val command = buildList {
+            when (serverScriptPath.substringAfterLast(".")) {
+                "js" -> add("node")
+                "py" -> add(if (System.getProperty("os.name").lowercase().contains("win")) "python" else "python3")
+                "jar" -> addAll(listOf("java", "-jar"))
+                else -> throw IllegalArgumentException("Server script must be a .js, .py or .jar file")
+            }
+            add(serverScriptPath)
+        }
 
         logger.info("Starting MCP server: ${command.joinToString(" ")}")
 
