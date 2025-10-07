@@ -11,6 +11,8 @@ A lightweight PyCharm plugin for inspecting and testing Model Context Protocol (
 - 🎨 Modern Compose-based UI
 - 🔧 Built-in diagnostics for troubleshooting
 
+<img src="assets/demo.gif"  alt="Here is the example"/>
+
 ## 📋 Prerequisites
 
 ### Required
