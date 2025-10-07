@@ -1,4 +1,4 @@
-package com.amirali.myplugin.mcpinspectorlite.services
+package com.amirali.myplugin.mcpinspectorlite.client
 
 import io.mockk.*
 import org.junit.jupiter.api.AfterEach

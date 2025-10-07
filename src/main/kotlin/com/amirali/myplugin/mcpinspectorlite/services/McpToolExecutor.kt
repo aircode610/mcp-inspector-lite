@@ -1,10 +1,14 @@
 package com.amirali.myplugin.mcpinspectorlite.services
 
 import com.amirali.myplugin.mcpinspectorlite.models.ToolInvocationResult
+import com.amirali.myplugin.mcpinspectorlite.models.UiTool
+import com.amirali.myplugin.mcpinspectorlite.util.SimpleParameterParser
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import io.modelcontextprotocol.kotlin.sdk.TextContent
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.JsonObject
 
 /**
  * Application-level service for tool execution and result processing
@@ -22,17 +26,37 @@ class McpToolExecutor {
      */
     suspend fun invokeTool(
         toolName: String,
-        parameters: Map<String, Any>
+        parameters: Map<String, String>,
+        tool: UiTool
     ): ToolInvocationResult {
         val client = connectionManager.getClient()
             ?: return ToolInvocationResult.Error("Not connected to MCP server")
 
         return try {
-            logger.info("Invoking tool: $toolName with parameters: $parameters")
+            val sdkTool = connectionManager.getTools().find { it.name == toolName }
+
+            val requiredFields = sdkTool?.inputSchema?.required ?: emptyList()
+            val validationErrors = SimpleParameterParser.validateRequired(parameters, requiredFields)
+
+            if (validationErrors.isNotEmpty()) {
+                return ToolInvocationResult.Error(
+                    "Validation failed:\n${validationErrors.joinToString("\n")}"
+                )
+            }
+
+            val schema = sdkTool?.inputSchema?.properties?.let { props ->
+                buildJsonObject {
+                    put("properties", JsonObject(props))
+                }
+            }
+
+            val typedParams = SimpleParameterParser.parseParameters(parameters, schema)
+
+            logger.info("Invoking tool: $toolName with parameters: $typedParams")
 
             val result = client.callTool(
                 name = toolName,
-                arguments = parameters
+                arguments = typedParams
             )
 
             val output = result!!.content.joinToString("\n") {
@@ -45,18 +69,6 @@ class McpToolExecutor {
         } catch (e: Exception) {
             logger.error("Failed to invoke tool $toolName", e)
             ToolInvocationResult.Error(e.message ?: "Unknown error")
-        }
-    }
-
-    /**
-     * Parse string parameter to appropriate type
-     */
-    fun parseParameter(value: String, type: String?): Any {
-        return when (type?.lowercase()) {
-            "int", "integer" -> value.toIntOrNull() ?: value
-            "float", "double", "number" -> value.toDoubleOrNull() ?: value
-            "boolean", "bool" -> value.toBoolean()
-            else -> value
         }
     }
 

@@ -5,7 +5,7 @@ import com.amirali.myplugin.mcpinspectorlite.models.ToolInvocationResult
 import com.amirali.myplugin.mcpinspectorlite.models.UiTool
 import com.amirali.myplugin.mcpinspectorlite.services.McpConnectionManager
 import com.amirali.myplugin.mcpinspectorlite.services.McpToolExecutor
-import com.amirali.myplugin.mcpinspectorlite.services.McpDiagnostics
+import com.amirali.myplugin.mcpinspectorlite.util.McpDiagnostics
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import kotlinx.coroutines.CoroutineScope
@@ -82,19 +82,20 @@ class McpToolWindowViewModel {
     /**
      * Invoke a tool with parameters
      */
-    fun invokeTool(toolName: String, parameters: Map<String, String>, parameterTypes: Map<String, String?>) {
+    fun invokeTool(toolName: String, parameters: Map<String, String>) {
         viewModelScope.launch {
-            val typedParams = parameters.mapValues { (key, value) ->
-                val type = parameterTypes[key]
-                toolExecutor.parseParameter(value, type)
+            val tool = _tools.value.find { it.name == toolName }
+            if (tool == null) {
+                _invocationResults.value += (toolName to "Error: Tool not found")
+                return@launch
             }
 
-            when (val result = toolExecutor.invokeTool(toolName, typedParams)) {
+            when (val result = toolExecutor.invokeTool(toolName, parameters, tool)) {
                 is ToolInvocationResult.Success -> {
                     _invocationResults.value += (toolName to result.output)
                 }
                 is ToolInvocationResult.Error -> {
-                    _invocationResults.value += _invocationResults.value + (toolName to "Error: ${result.message}")
+                    _invocationResults.value += (toolName to "Error: ${result.message}")
                 }
             }
         }

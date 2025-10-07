@@ -1,5 +1,7 @@
 package com.amirali.myplugin.mcpinspectorlite.services
 
+import com.amirali.myplugin.mcpinspectorlite.client.McpProcessManager
+import com.amirali.myplugin.mcpinspectorlite.client.McpResourceExtractor
 import com.amirali.myplugin.mcpinspectorlite.models.McpConnectionState
 import com.amirali.myplugin.mcpinspectorlite.models.ToolMapper
 import com.amirali.myplugin.mcpinspectorlite.models.UiTool
@@ -123,6 +125,11 @@ class McpConnectionManager {
         tools.clear()
         _connectionState.value = McpConnectionState.Disconnected
     }
+
+    /**
+     * Get the raw SDK tools for schema access
+     */
+    fun getTools(): List<Tool> = tools.toList()
 
     /**
      * Get UI-friendly tool representation
