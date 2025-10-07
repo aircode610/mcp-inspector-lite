@@ -46,7 +46,7 @@ python -c "import mcp; print('MCP installed successfully')"
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/mcp-inspector-lite.git
+git clone https://github.com/aircode610/mcp-inspector-lite.git
 cd mcp-inspector-lite
 ```
 
