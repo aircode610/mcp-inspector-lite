@@ -125,6 +125,11 @@ class McpConnectionManager {
     }
 
     /**
+     * Get the raw SDK tools for schema access
+     */
+    fun getTools(): List<Tool> = tools.toList()
+
+    /**
      * Get UI-friendly tool representation
      */
     fun getUiTools(): List<UiTool> = tools.map { ToolMapper.toUiTool(it) }

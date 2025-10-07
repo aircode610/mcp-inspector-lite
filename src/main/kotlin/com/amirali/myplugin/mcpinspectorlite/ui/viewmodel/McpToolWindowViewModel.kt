@@ -82,19 +82,20 @@ class McpToolWindowViewModel {
     /**
      * Invoke a tool with parameters
      */
-    fun invokeTool(toolName: String, parameters: Map<String, String>, parameterTypes: Map<String, String?>) {
+    fun invokeTool(toolName: String, parameters: Map<String, String>) {
         viewModelScope.launch {
-            val typedParams = parameters.mapValues { (key, value) ->
-                val type = parameterTypes[key]
-                toolExecutor.parseParameter(value, type)
+            val tool = _tools.value.find { it.name == toolName }
+            if (tool == null) {
+                _invocationResults.value += (toolName to "Error: Tool not found")
+                return@launch
             }
 
-            when (val result = toolExecutor.invokeTool(toolName, typedParams)) {
+            when (val result = toolExecutor.invokeTool(toolName, parameters, tool)) {
                 is ToolInvocationResult.Success -> {
                     _invocationResults.value += (toolName to result.output)
                 }
                 is ToolInvocationResult.Error -> {
-                    _invocationResults.value += _invocationResults.value + (toolName to "Error: ${result.message}")
+                    _invocationResults.value += (toolName to "Error: ${result.message}")
                 }
             }
         }

@@ -31,6 +31,11 @@ def fibonacci(n: int) -> List[int]:
     return seq[:n]
 
 @mcp.tool()
+def reverse_list(l : List) -> List[int]:
+    """Reverses the given list"""
+    return l[::-1]
+
+@mcp.tool()
 def ping() -> str:
     """Simple health check"""
     return "pong"

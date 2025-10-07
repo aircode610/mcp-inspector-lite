@@ -112,10 +112,7 @@ fun McpToolWindowUI() {
                             tool = tool,
                             result = results[tool.name],
                             onInvoke = { params ->
-                                val paramTypes = tool.parameters.associate {
-                                    it.name to it.type
-                                }
-                                viewModel.invokeTool(tool.name, params, paramTypes)
+                                viewModel.invokeTool(tool.name, params)
                             },
                             onClearResult = { viewModel.clearResult(tool.name) }
                         )
