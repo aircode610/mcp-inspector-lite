@@ -1,4 +1,4 @@
-package com.amirali.myplugin.mcpinspectorlite.services
+package com.amirali.myplugin.mcpinspectorlite.util
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.intellij.openapi.diagnostic.Logger

@@ -5,7 +5,7 @@ import com.amirali.myplugin.mcpinspectorlite.models.ToolInvocationResult
 import com.amirali.myplugin.mcpinspectorlite.models.UiTool
 import com.amirali.myplugin.mcpinspectorlite.services.McpConnectionManager
 import com.amirali.myplugin.mcpinspectorlite.services.McpToolExecutor
-import com.amirali.myplugin.mcpinspectorlite.services.McpDiagnostics
+import com.amirali.myplugin.mcpinspectorlite.util.McpDiagnostics
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import kotlinx.coroutines.CoroutineScope

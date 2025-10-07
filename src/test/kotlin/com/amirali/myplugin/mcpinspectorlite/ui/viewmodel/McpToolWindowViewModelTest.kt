@@ -59,12 +59,21 @@ class McpToolWindowViewModelTest {
 
     @Test
     fun `invokeTool stores success result`() = runBlocking {
-        every { mockToolExecutor.parseParameter("value", "string") } returns "value"
+        val testTool = UiTool(
+            name = "tool1",
+            description = "Test tool",
+            parameters = listOf(UiToolParameter("p", "string", null, false))
+        )
+        viewModel.tools.value.toMutableList().add(testTool)
+        every { mockConnectionManager.getUiTools() } returns listOf(testTool)
+        viewModel.connect()
+        delay(100)
+
         coEvery {
-            mockToolExecutor.invokeTool("tool1", mapOf("p" to "value"))
+            mockToolExecutor.invokeTool("tool1", mapOf("p" to "value"), testTool)
         } returns ToolInvocationResult.Success("Output")
 
-        viewModel.invokeTool("tool1", mapOf("p" to "value"), mapOf("p" to "string"))
+        viewModel.invokeTool("tool1", mapOf("p" to "value"))
         delay(100)
 
         assertEquals("Output", viewModel.invocationResults.value["tool1"])
@@ -72,11 +81,20 @@ class McpToolWindowViewModelTest {
 
     @Test
     fun `invokeTool stores error result`() = runBlocking {
+        val testTool = UiTool(
+            name = "tool1",
+            description = "Test tool",
+            parameters = emptyList()
+        )
+        every { mockConnectionManager.getUiTools() } returns listOf(testTool)
+        viewModel.connect()
+        delay(100)
+
         coEvery {
-            mockToolExecutor.invokeTool("tool1", any())
+            mockToolExecutor.invokeTool("tool1", emptyMap(), testTool)
         } returns ToolInvocationResult.Error("Failed")
 
-        viewModel.invokeTool("tool1", emptyMap(), emptyMap())
+        viewModel.invokeTool("tool1", emptyMap())
         delay(100)
 
         assertEquals("Error: Failed", viewModel.invocationResults.value["tool1"])

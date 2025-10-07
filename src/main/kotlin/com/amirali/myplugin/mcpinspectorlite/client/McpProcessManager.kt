@@ -1,4 +1,4 @@
-package com.amirali.myplugin.mcpinspectorlite.services
+package com.amirali.myplugin.mcpinspectorlite.client
 
 import com.amirali.myplugin.mcpinspectorlite.models.ProcessStreams
 import com.intellij.openapi.diagnostic.Logger

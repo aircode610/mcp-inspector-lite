@@ -2,6 +2,7 @@ package com.amirali.myplugin.mcpinspectorlite.services
 
 import com.amirali.myplugin.mcpinspectorlite.models.ToolInvocationResult
 import com.amirali.myplugin.mcpinspectorlite.models.UiTool
+import com.amirali.myplugin.mcpinspectorlite.util.SimpleParameterParser
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger

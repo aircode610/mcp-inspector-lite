@@ -1,5 +1,7 @@
 package com.amirali.myplugin.mcpinspectorlite.services
 
+import com.amirali.myplugin.mcpinspectorlite.client.McpProcessManager
+import com.amirali.myplugin.mcpinspectorlite.client.McpResourceExtractor
 import com.amirali.myplugin.mcpinspectorlite.models.McpConnectionState
 import com.amirali.myplugin.mcpinspectorlite.models.ToolMapper
 import com.amirali.myplugin.mcpinspectorlite.models.UiTool
