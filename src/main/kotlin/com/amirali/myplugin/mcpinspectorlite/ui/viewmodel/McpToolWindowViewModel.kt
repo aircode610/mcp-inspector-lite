@@ -6,6 +6,8 @@ import com.amirali.myplugin.mcpinspectorlite.models.UiTool
 import com.amirali.myplugin.mcpinspectorlite.services.McpConnectionManager
 import com.amirali.myplugin.mcpinspectorlite.services.McpToolExecutor
 import com.amirali.myplugin.mcpinspectorlite.services.McpDiagnostics
+import com.intellij.openapi.components.Service
+import com.intellij.openapi.components.service
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,8 +16,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 /**
- * ViewModel for the MCP Tool Window UI
+ * Application-level ViewModel for the MCP Tool Window UI
  */
+@Service(Service.Level.APP)
 class McpToolWindowViewModel {
 
     private val connectionManager = McpConnectionManager.getInstance()
@@ -33,6 +36,10 @@ class McpToolWindowViewModel {
     val diagnosticMessage: StateFlow<String?> = _diagnosticMessage.asStateFlow()
 
     val connectionState: StateFlow<McpConnectionState> = connectionManager.connectionState
+
+    companion object {
+        fun getInstance(): McpToolWindowViewModel = service()
+    }
 
     /**
      * Connect to the MCP server
